@@ -1,0 +1,9 @@
+node_modules
+config.json
+*.DS_Store
+id_rsa
+id_rsa.pub
+auth.js
+/index.js
+/.idea
+.env

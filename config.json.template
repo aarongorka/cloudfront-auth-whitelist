@@ -1,0 +1,21 @@
+{
+    "AUTH_REQUEST": {
+        "client_id": "${CLIENT_ID}",
+        "redirect_uri": "${REDIRECT_URI}",
+        "scope": "read:org user:email"
+    },
+    "TOKEN_REQUEST": {
+        "client_id": "${CLIENT_ID}",
+        "client_secret": "${CLIENT_SECRET}",
+        "redirect_uri": "${REDIRECT_URI}"
+    },
+    "DISTRIBUTION": "${DISTRIBUTION}",
+    "AUTHN": "GITHUB",
+    "PRIVATE_KEY": "${PRIVATE_KEY}",
+    "PUBLIC_KEY": "${PUBLIC_KEY}",
+    "SESSION_DURATION": 3600,
+    "CALLBACK_PATH": "${CALLBACK_PATH}",
+    "ORGANIZATION": "${ORGANIZATION}",
+    "AUTHORIZATION_ENDPOINT": "https://github.com/login/oauth/authorize",
+    "TOKEN_ENDPOINT": "https://github.com/login/oauth/access_token"
+}
