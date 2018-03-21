@@ -15,6 +15,7 @@ _deploy:
 	cp .env.template .env
 
 config.json:
+	docker-compose pull envsubst
 	docker-compose run --rm envsubst config.json.template > config.json
 
 clean:
