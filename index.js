@@ -14,62 +14,57 @@ var jwks;
 var config;
 
 exports.handler = (event, context, callback) => {
-  if (typeof jwks == 'undefined' || typeof discoveryDocument == 'undefined' || typeof config == 'undefined') {
-    config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+  config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
-    ddb = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-10-08', region: config.DYNAMO_AWS_REGION});
+  ddb = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-10-08', region: config.DYNAMO_AWS_REGION});
 
-    // Get request and request headers
-    const request = event.Records[0].cf.request;
-    const headers = request.headers;
+  // Get request and request headers
+  const request = event.Records[0].cf.request;
+  const headers = request.headers;
 
-    let params = {
-      TableName: ddbTableName,
-      Key: {
-        "ip": request.clientIp
-      }
-    };
+  let params = {
+    TableName: ddbTableName,
+    Key: {
+      "ip": request.clientIp
+    }
+  };
 
-    ddb.get(params, function(err, data) {
-      if (err) {
-        console.error("Unable to get item. Error:", JSON.stringify(err, null, 2));
-        callback(null, request); // let it pass
+  ddb.get(params, function(err, data) {
+    if (err) {
+      console.error("Unable to get item. Error:", JSON.stringify(err, null, 2));
+      callback(null, request); // let it pass
+    } else {
+      if ('Item' in data) {
+        // IP found in whitelist
+        callback(null, request);
       } else {
-        if ('Item' in data) {
-          // IP found in whitelist
-          callback(null, request);
-        } else {
-          // IP not in whitelist. Require Basic authentication
-          // Get Discovery Document data
-          axios.get(config.DISCOVERY_DOCUMENT)
-            .then(function(response) {
-              // Get jwks from discovery document url
-              discoveryDocument = response.data;
-              if (discoveryDocument.hasOwnProperty('jwks_uri')) {
-                // Get public key and verify JWT
-                axios.get(discoveryDocument.jwks_uri)
-                  .then(function(response) {
-                    jwks = response.data;
-                    // Callback to main function
-                    mainProcess(event, context, callback);
-                  })
-                  .catch(function(error) {
-                    internalServerError(error.message, callback);
-                  });
-              } else {
-                internalServerError("Unable to find JWK in discovery document.", callback);
-              }
-            })
-            .catch(function(error) {
-              internalServerError(error.message, callback);
-            });
-        }
+        // IP not in whitelist. Require Basic authentication
+        // Get Discovery Document data
+        axios.get(config.DISCOVERY_DOCUMENT)
+          .then(function(response) {
+            // Get jwks from discovery document url
+            discoveryDocument = response.data;
+            if (discoveryDocument.hasOwnProperty('jwks_uri')) {
+              // Get public key and verify JWT
+              axios.get(discoveryDocument.jwks_uri)
+                .then(function(response) {
+                  jwks = response.data;
+                  // Callback to main function
+                  mainProcess(event, context, callback);
+                })
+                .catch(function(error) {
+                  internalServerError(error.message, callback);
+                });
+            } else {
+              internalServerError("Unable to find JWK in discovery document.", callback);
+            }
+          })
+          .catch(function(error) {
+            internalServerError(error.message, callback);
+          });
       }
-    });
-
-  } else {
-    mainProcess(event, context, callback);
-  }
+    }
+  });
 };
 
 function addToWhitelist(clientIp, callback) {
