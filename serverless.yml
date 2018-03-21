@@ -1,16 +1,14 @@
+# service: MV-${env:REALM}-CloudFront-Auth
 service: cloudfront-edge-oauth
 provider:
   name: aws
   runtime: nodejs6.10
-  stage: ${opt:stage, self:custom.defaultStage}
-  region: us-east-1
+  region: ${env:AWS_REGION}
+  stage: ${env:ENV}
   role:
     Fn::GetAtt:
       - LambdaRole
       - Arn
-
-custom:
-  defaultStage: dev
 
 functions:
   github-oauth:
@@ -18,15 +16,8 @@ functions:
     memorySize: 128
     timeout: 5
 
-# plugins:
-#   - serverless-plugin-optimize
-
 package:
   individually: true
-
-# package:
-#    exclude:
-#       - 'node_modules/**'
 
 resources:
   Resources:
@@ -61,16 +52,12 @@ resources:
                   Action:
                     - dynamodb:*
                   Resource:
-                    Fn::Join: [
-                      "", [
-                        { "Fn::GetAtt": [ "dynamoDBTable", "Arn" ] },
-                        "/*"
-                      ]
-                    ]
+                    "Fn::GetAtt": [ "dynamoDBTable", "Arn" ]
 
     dynamoDBTable:
       Type: "AWS::DynamoDB::Table"
       Properties:
+        TableName: cloudfront-nonprod-whitelist
         KeySchema:
           - AttributeName: "ip"
             KeyType: "HASH"
