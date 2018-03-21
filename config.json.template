@@ -1,7 +1,7 @@
 {
     "AUTH_REQUEST": {
         "client_id": "${CLIENT_ID}",
-        "redirect_uri": "${REDIRECT_URI}",
+        "redirect_uri": "",
         "response_type": "code",
         "response_mode": "query",
         "scope": "openid"
@@ -9,7 +9,7 @@
     "TOKEN_REQUEST": {
         "client_id": "${CLIENT_ID}",
         "grant_type": "authorization_code",
-        "redirect_uri": "${REDIRECT_URI}",
+        "redirect_uri": "",
         "client_secret": "${CLIENT_SECRET}"
     },
     "DYNAMO_AWS_REGION": "${DYNAMO_AWS_REGION}",

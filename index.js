@@ -90,10 +90,10 @@ function mainProcess(event, context, callback) {
   const request = event.Records[0].cf.request;
   const headers = request.headers;
   const queryDict = qs.parse(request.querystring);
-  if (event.Records[0].cf.config.hasOwnProperty('test')) {
-    config.AUTH_REQUEST.redirect_uri = event.Records[0].cf.config.test + config.CALLBACK_PATH;
-    config.TOKEN_REQUEST.redirect_uri = event.Records[0].cf.config.test + config.CALLBACK_PATH;
-  }
+
+  config.AUTH_REQUEST.redirect_uri = event.Records[0].cf.request.headers.host[0].value + config.CALLBACK_PATH;
+  config.TOKEN_REQUEST.redirect_uri = event.Records[0].cf.request.headers.host[0].value + config.CALLBACK_PATH;
+
   if (request.uri.startsWith(config.CALLBACK_PATH)) {
     console.log("Callback from OIDC provider received");
     /** Verify code is in querystring */
