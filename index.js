@@ -88,7 +88,7 @@ exports.handlerWhitelist = (event, context, callback) => {
         // IP found in whitelist
         callback(null, request);
       } else {
-        unauthorized('Go to www-{env}.amaysim.com.au and authenticate first.', callback);
+        unauthorized('Go to https://www-'+config.ENV.toLowerCase()+'.amaysim.com.au and authenticate first.', callback);
       }
     }
   });
