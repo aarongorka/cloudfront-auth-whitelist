@@ -1,10 +1,10 @@
-const axios = require('axios');
-
 function isAuthorized(decoded, request, callback, unauthorized, internalServerError, config) {
-    callback(null, request);
+  callback(null, request);
 }
 
-function getSubject(data) { return data; }
+function getSubject(decoded) {
+  return decoded.payload.unique_name;
+}
 
 exports.isAuthorized = isAuthorized;
 exports.getSubject = getSubject;
