@@ -8,6 +8,7 @@ deploy: .env config.json $(ASSUME_REQUIRED)
 
 _deploy:
 	rm -fr .serverless
+	npm install
 	sls deploy -v
 
 .env:
