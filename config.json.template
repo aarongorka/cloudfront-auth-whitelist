@@ -19,5 +19,6 @@
     "DISCOVERY_DOCUMENT": "https://login.microsoftonline.com/${TENANT_ID}/.well-known/openid-configuration",
     "SESSION_DURATION": 3600,
     "CALLBACK_PATH": "${CALLBACK_PATH}",
-    "AUTHZ": "1"
+    "AUTHZ": "1",
+    "ENV": "${ENV}"
 }

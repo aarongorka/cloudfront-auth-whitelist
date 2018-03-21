@@ -7,7 +7,7 @@ const auth = require('./auth.js');
 const axios = require('axios');
 const AWS = require('aws-sdk');
 var ddb;
-const ddbTableName = 'cloudfront-nonprod-whitelist';
+const ddbTableName
 
 var discoveryDocument;
 var jwks;
@@ -17,6 +17,7 @@ exports.handler = (event, context, callback) => {
   config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
   ddb = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-10-08', region: config.DYNAMO_AWS_REGION});
+  ddbTableName = 'cloudfront-whitelist-' + config.ENV;
 
   // Get request and request headers
   const request = event.Records[0].cf.request;
