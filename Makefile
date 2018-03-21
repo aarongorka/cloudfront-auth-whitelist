@@ -1,6 +1,8 @@
+ifdef AWS_ROLE
+       ASSUME_REQUIRED?=assumeRole
+endif
 
-
-deploy: .env config.json
+deploy: .env config.json $(ASSUME_REQUIRED)
 	docker-compose run --rm serverless make _deploy
 .PHONY: deploy
 
@@ -17,3 +19,7 @@ config.json:
 
 clean:
 	rm -fr config.json
+
+assumeRole: .env
+	docker run --rm -e "AWS_ACCOUNT_ID" -e "AWS_ROLE" amaysim/aws:1.1.3 assume-role.sh >> .env
+.PHONY: assumeRole
