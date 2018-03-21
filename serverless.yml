@@ -11,7 +11,7 @@ provider:
       - Arn
 
 functions:
-  github-oauth:
+  auth:
     handler: index.handler
     memorySize: 128
     timeout: 5

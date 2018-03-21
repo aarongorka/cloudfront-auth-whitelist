@@ -7,7 +7,7 @@ const auth = require('./auth.js');
 const axios = require('axios');
 const AWS = require('aws-sdk');
 var ddb;
-const ddbTableName
+var ddbTableName;
 
 var discoveryDocument;
 var jwks;
