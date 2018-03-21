@@ -17,7 +17,7 @@ exports.handler = (event, context, callback) => {
   if (typeof jwks == 'undefined' || typeof discoveryDocument == 'undefined' || typeof config == 'undefined') {
     config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
-    ddb = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-10-08', region: config.AWS_REGION});
+    ddb = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-10-08', region: config.DYNAMO_AWS_REGION});
 
     // Get request and request headers
     const request = event.Records[0].cf.request;
