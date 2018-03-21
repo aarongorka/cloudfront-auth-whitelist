@@ -14,10 +14,8 @@ var jwks;
 var config;
 
 exports.handler = (event, context, callback) => {
-  config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
-  ddb = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-10-08', region: config.DYNAMO_AWS_REGION});
-  ddbTableName = 'cloudfront-whitelist-' + config.ENV;
+  initialize();
 
   // Get request and request headers
   const request = event.Records[0].cf.request;
@@ -68,6 +66,42 @@ exports.handler = (event, context, callback) => {
   });
 };
 
+exports.handlerWhitelist = (event, context, callback) => {
+  initialize();
+
+  // Get request and request headers
+  const request = event.Records[0].cf.request;
+
+  let params = {
+    TableName: ddbTableName,
+    Key: {
+      "ip": request.clientIp
+    }
+  };
+
+  ddb.get(params, function(err, data) {
+    if (err) {
+      console.error("Unable to get item. Error:", JSON.stringify(err, null, 2));
+      callback(null, request); // let it pass
+    } else {
+      if ('Item' in data) {
+        // IP found in whitelist
+        callback(null, request);
+      } else {
+        unauthorized('Go to www-{env}.amaysim.com.au and authenticate first.', callback);
+      }
+    }
+  });
+
+};
+
+function initialize() {
+  config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+
+  ddb = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-10-08', region: config.DYNAMO_AWS_REGION});
+  ddbTableName = 'cloudfront-whitelist-' + config.ENV;
+}
+
 function addToWhitelist(clientIp, callback) {
   let item = {
       TableName: ddbTableName,
@@ -91,8 +125,8 @@ function mainProcess(event, context, callback) {
   const headers = request.headers;
   const queryDict = qs.parse(request.querystring);
 
-  config.AUTH_REQUEST.redirect_uri = event.Records[0].cf.request.headers.host[0].value + config.CALLBACK_PATH;
-  config.TOKEN_REQUEST.redirect_uri = event.Records[0].cf.request.headers.host[0].value + config.CALLBACK_PATH;
+  config.AUTH_REQUEST.redirect_uri = 'https://' + headers.host[0].value + config.CALLBACK_PATH;
+  config.TOKEN_REQUEST.redirect_uri = 'https://' + headers.host[0].value + config.CALLBACK_PATH;
 
   if (request.uri.startsWith(config.CALLBACK_PATH)) {
     console.log("Callback from OIDC provider received");
