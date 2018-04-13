@@ -28,6 +28,8 @@ exports.handler = (event, context, callback) => {
     }
   };
 
+  console.log('request', request);
+
   ddb.get(params, function(err, data) {
     if (err) {
       console.error("Unable to get item. Error:", JSON.stringify(err, null, 2));
@@ -37,6 +39,7 @@ exports.handler = (event, context, callback) => {
         // IP found in whitelist
         callback(null, request);
       } else {
+        console.log('data', data);
         // IP not in whitelist. Require Basic authentication
         // Get Discovery Document data
         axios.get(config.DISCOVERY_DOCUMENT)
