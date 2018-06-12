@@ -46,7 +46,7 @@ exports.handler = (event, context, callback) => {
 };
 
 function addToWhitelist(clientIp, callback) {
-  let expiration = String(Date.now() + 2629800);  // whitelist expires after 1 month
+  let expiration = Date.now() + 2629800;  // whitelist expires after 1 month
   let item = {
       TableName: ddbTableName,
       Item: {
