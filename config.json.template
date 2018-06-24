@@ -9,7 +9,6 @@
         "client_secret": "${CLIENT_SECRET}",
         "redirect_uri": "${REDIRECT_URI}"
     },
-    "DISTRIBUTION": "${DISTRIBUTION}",
     "AUTHN": "GITHUB",
     "PRIVATE_KEY": "${PRIVATE_KEY}",
     "PUBLIC_KEY": "${PUBLIC_KEY}",
@@ -18,5 +17,6 @@
     "ORGANIZATION": "${ORGANIZATION}",
     "AUTHORIZATION_ENDPOINT": "https://github.com/login/oauth/authorize",
     "TOKEN_ENDPOINT": "https://github.com/login/oauth/access_token",
-    "AWS_REGION": "${AWS_REGION}"
+    "AWS_REGION": "${AWS_REGION}",
+    "ENV": "${ENV}"
 }

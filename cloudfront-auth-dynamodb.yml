@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: DynamoDB Table resource needed by CloudFront-Auth-Whitelist lambda@edge
+
+Parameters:
+  Env:
+    Description: Which Environment
+    Type: String
+    Default: Dev
+    AllowedValues:
+      - Dev
+      - QA
+      - PreProd
+
+Resources:
+  dynamoDBTable:
+    Type: "AWS::DynamoDB::Table"
+    Properties:
+      TableName: !Sub "cloudfront-whitelist-${Env}"
+      KeySchema:
+        - AttributeName: "ip"
+          KeyType: "HASH"
+      AttributeDefinitions:
+        - AttributeName: "ip"
+          AttributeType: "S"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 1

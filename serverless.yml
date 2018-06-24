@@ -1,5 +1,5 @@
-# service: MV-${env:REALM}-CloudFront-Auth
-service: cloudfront-edge-oauth
+service: MV-${env:REALM}-CloudFront-Auth
+# service: cloudfront-edge-oauth
 provider:
   name: aws
   runtime: nodejs6.10
@@ -11,8 +11,12 @@ provider:
       - Arn
 
 functions:
-  github-oauth:
+  auth:
     handler: index.handler
+    memorySize: 128
+    timeout: 5
+  whitelist:
+    handler: index.handlerWhitelist
     memorySize: 128
     timeout: 5
 
@@ -52,18 +56,4 @@ resources:
                   Action:
                     - dynamodb:*
                   Resource:
-                    "Fn::GetAtt": [ "dynamoDBTable", "Arn" ]
-
-    dynamoDBTable:
-      Type: "AWS::DynamoDB::Table"
-      Properties:
-        TableName: cloudfront-nonprod-whitelist
-        KeySchema:
-          - AttributeName: "ip"
-            KeyType: "HASH"
-        AttributeDefinitions:
-          - AttributeName: "ip"
-            AttributeType: "S"
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 5
+                    arn:aws:dynamodb:${env:DYNAMO_AWS_REGION}:*:table/cloudfront-whitelist-${env:ENV}

@@ -7,20 +7,50 @@ const auth = require('./auth.js');
 const axios = require('axios');
 const AWS = require('aws-sdk');
 var ddb;
-const ddbTableName = 'cloudfront-nonprod-whitelist';
+var ddbTableName;
 
 var config;
 
 exports.handler = (event, context, callback) => {
-  if (typeof config == 'undefined') {
-    config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
-  }
 
-  ddb = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-10-08', region: config.AWS_REGION});
+  initialize();
 
   // Get request and request headers
   const request = event.Records[0].cf.request;
   const headers = request.headers;
+
+  let params = {
+    TableName: ddbTableName,
+    Key: {
+      "ip": request.clientIp
+    }
+  };
+
+  console.log('event', JSON.stringify(event, null, 2));
+
+  ddb.get(params, function(err, data) {
+    if (err) {
+      console.error("Unable to get item. Error:", JSON.stringify(err, null, 2));
+      callback(null, request); // let it pass
+    } else {
+      if ('Item' in data) {
+        // IP found in whitelist
+        console.log('whitelisted item', JSON.stringify(data, null, 2));
+        callback(null, request);
+      } else {
+        console.log('data', JSON.stringify(data, null, 2));
+        // IP not in whitelist. Require Basic authentication
+        mainProcess(event, context, callback);
+      }
+    }
+  });
+};
+
+exports.handlerWhitelist = (event, context, callback) => {
+  initialize();
+
+  // Get request and request headers
+  const request = event.Records[0].cf.request;
 
   let params = {
     TableName: ddbTableName,
@@ -38,12 +68,19 @@ exports.handler = (event, context, callback) => {
         // IP found in whitelist
         callback(null, request);
       } else {
-        // IP not in whitelist. Require Basic authentication
-        mainProcess(event, context, callback);
+        unauthorized('Go to https://www-'+config.ENV.toLowerCase()+'.amaysim.com.au and authenticate first.', callback);
       }
     }
   });
+
 };
+
+function initialize() {
+  config = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+
+  ddb = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-10-08', region: config.DYNAMO_AWS_REGION});
+  ddbTableName = 'cloudfront-whitelist-' + config.ENV;
+}
 
 function addToWhitelist(clientIp, callback) {
   let item = {
@@ -111,10 +148,10 @@ function mainProcess(event, context, callback) {
                             { },
                             config.PRIVATE_KEY.trim(),
                             {
-                              audience: headers.host[0].value,
-                              subject: auth.getSubject(username),
-                              expiresIn: config.SESSION_DURATION,
-                              algorithm: 'RS256'
+                              "audience": headers.host[0].value,
+                              "subject": auth.getSubject(username),
+                              "expiresIn": config.SESSION_DURATION,
+                              "algorithm": 'RS256'
                             } // Options
                           ))
                         }],
@@ -139,26 +176,32 @@ function mainProcess(event, context, callback) {
       });
   } else if ("cookie" in headers
               && "TOKEN" in cookie.parse(headers["cookie"][0].value)) {
+    console.log("Request received with TOKEN cookie. Validating.");
     // Verify the JWT, the payload email, and that the email ends with configured hosted domain
     jwt.verify(cookie.parse(headers["cookie"][0].value).TOKEN, config.PUBLIC_KEY.trim(), { algorithms: ['RS256'] }, function(err, decoded) {
       if (err) {
         switch (err.name) {
           case 'TokenExpiredError':
-            redirect(request, headers, callback);
+            console.log("Token expired, redirecting to OIDC provider.");
+            redirect(request, headers, callback)
             break;
           case 'JsonWebTokenError':
+            console.log("JWT error, unauthorized.");
             unauthorized(err.message, callback);
             break;
           default:
+            console.log("Unknown JWT error, unauthorized.");
             unauthorized('Unauthorized. User ' + decoded.sub + ' is not permitted.', callback);
         }
       } else {
+        console.log("Authorizing user.");
         addToWhitelist(request.clientIp, function() {
           auth.isAuthorized(decoded, request, callback, unauthorized, internalServerError, config);
         });
       }
     });
   } else {
+    console.log("Redirecting to OIDC provider.");
     redirect(request, headers, callback);
   }
 }
@@ -169,10 +212,10 @@ function redirect(request, headers, callback) {
   var querystring = qs.stringify(config.AUTH_REQUEST);
 
   const response = {
-    status: "302",
-    statusDescription: "Found",
-    body: "Redirecting to OAuth2 provider",
-    headers: {
+    "status": "302",
+    "statusDescription": "Found",
+    "body": "Redirecting to OAuth2 provider",
+    "headers": {
       "location" : [{
         "key": "Location",
         "value": config.AUTHORIZATION_ENDPOINT + '?' + querystring
