@@ -107,10 +107,12 @@ function initialize() {
 }
 
 function addToWhitelist(clientIp, callback) {
+  let expiration = Date.now() + 2629800;  // whitelist expires after 1 month
   let item = {
       TableName: ddbTableName,
       Item: {
-          "ip": clientIp
+          "ip": clientIp,
+          "expiration": expiration
       }
   };
   ddb.put(item, function(err, data) {
